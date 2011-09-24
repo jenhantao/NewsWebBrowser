@@ -8,8 +8,10 @@
  */
 package newswebbrowser;
 
+import edu.uci.ics.jung.visualization.VisualizationModel;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -24,6 +26,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Point2D;
 
+import java.util.Collection;
 import javax.swing.BorderFactory;
 import javax.swing.JApplet;
 import javax.swing.JButton;
@@ -38,6 +41,7 @@ import org.apache.commons.collections15.functors.ConstantTransformer;
 
 import edu.uci.ics.jung.algorithms.layout.BalloonLayout;
 import edu.uci.ics.jung.algorithms.layout.TreeLayout;
+import edu.uci.ics.jung.algorithms.layout.util.Relaxer;
 import edu.uci.ics.jung.graph.DirectedGraph;
 import edu.uci.ics.jung.graph.DirectedSparseMultigraph;
 import edu.uci.ics.jung.graph.Forest;
@@ -62,6 +66,7 @@ import edu.uci.ics.jung.visualization.transform.MutableTransformerDecorator;
 import edu.uci.ics.jung.visualization.transform.shape.HyperbolicShapeTransformer;
 import edu.uci.ics.jung.visualization.transform.shape.ViewLensSupport;
 import edu.uci.ics.jung.visualization.util.Animator;
+import java.awt.Point;
 
 /**
  * Demonstrates the visualization of a Tree using TreeLayout
@@ -114,24 +119,20 @@ public class DisplayGraph extends JApplet {
     VisualizationViewer<String, Integer> vv;
     VisualizationServer.Paintable rings;
     String root;
-    TreeLayout<String, Integer> layout;
     BalloonLayout<String, Integer> radialLayout;
+
     /**
      * provides a Hyperbolic lens for the view
      */
-    LensSupport hyperbolicViewSupport;
-
     public DisplayGraph() {
 
         // create a simple graph for the demo
         graph = new DelegateForest<String, Integer>();
 
         createTree();
-
-        layout = new TreeLayout<String, Integer>(graph);
         radialLayout = new BalloonLayout<String, Integer>(graph);
-        radialLayout.setSize(new Dimension(900, 900));
-        vv = new VisualizationViewer<String, Integer>(layout, new Dimension(600, 600));
+        radialLayout.setSize(new Dimension(400, 400));
+        vv = new VisualizationViewer<String, Integer>(radialLayout, new Dimension(400, 400));
         vv.setBackground(Color.white);
         vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.Line());
         vv.getRenderContext().setVertexLabelTransformer(new ToStringLabeller());
@@ -139,95 +140,58 @@ public class DisplayGraph extends JApplet {
         vv.setVertexToolTipTransformer(new ToStringLabeller());
         vv.getRenderContext().setArrowFillPaintTransformer(new ConstantTransformer(Color.lightGray));
         rings = new Rings(radialLayout);
+        vv.getRenderContext().getMultiLayerTransformer().getTransformer(Layer.LAYOUT).setToIdentity();
+        vv.addPreRenderPaintable(rings);
+
 
         Container content = getContentPane();
-        final GraphZoomScrollPane panel = new GraphZoomScrollPane(vv);
+        GraphZoomScrollPane panel = new GraphZoomScrollPane(vv);
         content.add(panel);
 
-        final DefaultModalGraphMouse graphMouse = new DefaultModalGraphMouse();
+        DefaultModalGraphMouse graphMouse = new DefaultModalGraphMouse();
 
         vv.setGraphMouse(graphMouse);
         vv.addKeyListener(graphMouse.getModeKeyListener());
-
-        hyperbolicViewSupport =
-                new ViewLensSupport<String, Integer>(vv, new HyperbolicShapeTransformer(vv,
-                vv.getRenderContext().getMultiLayerTransformer().getTransformer(Layer.VIEW)),
-                new ModalLensGraphMouse());
-
-
-        graphMouse.addItemListener(hyperbolicViewSupport.getGraphMouse().getModeListener());
-
-        JComboBox modeBox = graphMouse.getModeComboBox();
-        modeBox.addItemListener(graphMouse.getModeListener());
         graphMouse.setMode(ModalGraphMouse.Mode.TRANSFORMING);
 
-        final ScalingControl scaler = new CrossoverScalingControl();
+    }
+/**
+     * 
+     * @param hub- The hub that you want to attach the article
+     * @param title- the title of the article, may be switched out for additional metadata to generate icon image
+     */
+    public void addArticle(String hub, String title) {
+        graph.addEdge(edgeFactory.create(), hub, title);
+        radialLayout = new BalloonLayout<String, Integer>(graph);
+        radialLayout.setSize(new Dimension(400, 400));
+        vv.getModel().setGraphLayout(radialLayout);
+        vv.repaint();
+        rings = new Rings(radialLayout);
+        vv.getRenderContext().getMultiLayerTransformer().getTransformer(Layer.LAYOUT).setToIdentity();
+        vv.addPreRenderPaintable(rings);
+    }
 
-        vv.scaleToLayout(scaler);
+    public void moveViewTo(String hub) {
 
-        JButton plus = new JButton("+");
-        plus.addActionListener(new ActionListener() {
 
-            public void actionPerformed(ActionEvent e) {
-                graph.addEdge(edgeFactory.create(), "Sports", "Tennis");
-                graph.addEdge(edgeFactory.create(), "Sports", "Basketball");
-                radialLayout = new BalloonLayout<String, Integer>(graph);
-                radialLayout.setSize(new Dimension(900, 900));
-                rings = new Rings(radialLayout);
+        MutableTransformer modelTransformer = vv.getRenderContext().getMultiLayerTransformer().getTransformer(Layer.LAYOUT);
+        try {
+            graph.addEdge(edgeFactory.create(), hub, "test");
+            Point2D hubLocation = radialLayout.getCenter("test");
+            graph.removeVertex("test");
+            Point2D center = new Point(vv.getWidth() / 2, vv.getHeight() / 2);
+//                Point2D q = vv.getRenderContext().getMultiLayerTransformer().inverseTransform(down);
+//                Point2D p = vv.getRenderContext().getMultiLayerTransformer().inverseTransform(e.getPoint());
+            float dx = (float) (center.getX() - hubLocation.getX());
+            float dy = (float) (center.getY() - hubLocation.getY());
 
-            }
-        });
-        JButton minus = new JButton("-");
-        minus.addActionListener(new ActionListener() {
+            modelTransformer.translate(dx, dy);
 
-            public void actionPerformed(ActionEvent e) {
-                scaler.scale(vv, 1 / 1.1f, vv.getCenter());
-            }
-        });
+        } catch (RuntimeException ex) {
+            ex.printStackTrace();
+        }
 
-        JToggleButton radial = new JToggleButton("Balloon");
-        radial.addItemListener(new ItemListener() {
-
-            public void itemStateChanged(ItemEvent e) {
-                if (e.getStateChange() == ItemEvent.SELECTED) {
-
-                    LayoutTransition<String, Integer> lt =
-                            new LayoutTransition<String, Integer>(vv, layout, radialLayout);
-                    Animator animator = new Animator(lt);
-                    animator.start();
-                    vv.getRenderContext().getMultiLayerTransformer().getTransformer(Layer.LAYOUT).setToIdentity();
-                    vv.addPreRenderPaintable(rings);
-                } else {
-
-                    LayoutTransition<String, Integer> lt =
-                            new LayoutTransition<String, Integer>(vv, radialLayout, layout);
-                    Animator animator = new Animator(lt);
-                    animator.start();
-                    vv.getRenderContext().getMultiLayerTransformer().getTransformer(Layer.LAYOUT).setToIdentity();
-                    vv.removePreRenderPaintable(rings);
-                }
-                vv.repaint();
-            }
-        });
-        final JRadioButton hyperView = new JRadioButton("Hyperbolic View");
-        hyperView.addItemListener(new ItemListener() {
-
-            public void itemStateChanged(ItemEvent e) {
-                hyperbolicViewSupport.activate(e.getStateChange() == ItemEvent.SELECTED);
-            }
-        });
-
-        JPanel scaleGrid = new JPanel(new GridLayout(1, 0));
-        scaleGrid.setBorder(BorderFactory.createTitledBorder("Zoom"));
-
-        JPanel controls = new JPanel();
-        scaleGrid.add(plus);
-        scaleGrid.add(minus);
-        controls.add(radial);
-        controls.add(scaleGrid);
-        controls.add(modeBox);
-        controls.add(hyperView);
-        content.add(controls, BorderLayout.SOUTH);
+        vv.repaint();
     }
 
     class Rings implements VisualizationServer.Paintable {
@@ -263,7 +227,7 @@ public class DisplayGraph extends JApplet {
                     shape = vv.getRenderContext().getMultiLayerTransformer().transform(Layer.LAYOUT, shape);
                 }
 
-                g2d.draw(shape);
+//                g2d.draw(shape);
             }
         }
 
@@ -282,6 +246,8 @@ public class DisplayGraph extends JApplet {
         graph.addEdge(edgeFactory.create(), "Central Hub", "Finance");
         graph.addEdge(edgeFactory.create(), "Central Hub", "Arts");
         graph.addEdge(edgeFactory.create(), "Central Hub", "World");
+//        graph.addEdge(edgeFactory.create(), "Sports", "Basketball");
+//        graph.addEdge(edgeFactory.create(), "Sports", "Tennis");
 
     }
 }
