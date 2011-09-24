@@ -4,6 +4,9 @@
  */
 package newswebbrowser;
 
+import java.awt.Container;
+import javax.swing.JFrame;
+
 /**
  *
  * @author jenhan
@@ -14,6 +17,11 @@ public class NewsWebBrowser {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        // TODO code application logic here
-    }
+        JFrame frame = new JFrame();
+        Container content = frame.getContentPane();
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        content.add(new DisplayGraph());
+        frame.pack();
+        frame.setVisible(true);    }
 }
