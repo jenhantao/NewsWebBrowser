@@ -124,7 +124,7 @@ public class DisplayGraph extends JApplet {
         vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.Line());
         vv.getRenderContext().setVertexLabelTransformer(new ToStringLabeller());
         // add a listener for ToolTips
-        vv.setVertexToolTipTransformer(new ToStringLabeller());
+//        vv.setVertexToolTipTransformer(new ToStringLabeller());
         vv.getRenderContext().setArrowFillPaintTransformer(new ConstantTransformer(Color.lightGray));
         rings = new Rings(radialLayout);
         vv.getRenderContext().getMultiLayerTransformer().getTransformer(Layer.LAYOUT).setToIdentity();
@@ -148,7 +148,7 @@ public class DisplayGraph extends JApplet {
                     break;
 
                 }
-                if (source!=null) {
+                if (source != null) {
                     //TODO retrieve the description
                 }
                 return source;
@@ -214,8 +214,6 @@ public class DisplayGraph extends JApplet {
                     graph.removeVertex("test");
                     if (nodeLocation.distanceSq(me.getPoint()) < 100) {
                         source = vertex;
-
-
                         ActionEvent event = new ActionEvent(source, eventID, null);
                         eventID++;
                         //passes source object, which is a string describing the node title
@@ -242,10 +240,31 @@ public class DisplayGraph extends JApplet {
 
             @Override
             public void mouseEntered(MouseEvent me) {
+                vv.setBackground(Color.darkGray);
+                vv.setForeground(Color.white);
+                vv.getRenderContext().setVertexFillPaintTransformer(new Transformer() {
+
+                    @Override
+                    public Object transform(Object i) {
+                        return Color.blue;
+                    }
+                });
+                ;
+                vv.repaint();
             }
 
             @Override
             public void mouseExited(MouseEvent me) {
+                vv.setBackground(Color.white);
+                vv.setForeground(Color.black);
+                vv.repaint();
+                vv.getRenderContext().setVertexFillPaintTransformer(new Transformer() {
+
+                    @Override
+                    public Object transform(Object i) {
+                        return Color.red;
+                    }
+                });
             }
         });
 
