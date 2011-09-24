@@ -5,6 +5,7 @@
 package newswebbrowser;
 
 import java.awt.Container;
+import java.awt.image.BufferedImage;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.logging.Level;
@@ -32,18 +33,6 @@ public class NewsWebBrowser {
         dg.addArticle("Sports", "tennis");
         dg.addArticle("Sports", "boxing");
         dg.addArticle("Sports", "rowing");
-        try {
-            URL url = new URL("http://www.yellowcowstudio.com/wp-content/uploads/2010/09/015961-yellow-road-sign-icon-animals-animal-cow2.png");
-            java.awt.Image image = java.awt.Toolkit.getDefaultToolkit().getDefaultToolkit().createImage(url);
-            
-            JLabel mooLabel = new JLabel("moo");
-            mooLabel.setIcon(new ImageIcon(image));
-            
-            mooLabel.setVisible(true);
-            frame.add(mooLabel);
-        } catch (MalformedURLException ex) {
-            Logger.getLogger(NewsWebBrowser.class.getName()).log(Level.SEVERE, null, ex);
-        }
         frame.pack();
         frame.setVisible(true);
     }

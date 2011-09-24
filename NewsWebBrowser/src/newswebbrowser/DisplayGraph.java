@@ -8,40 +8,24 @@
  */
 package newswebbrowser;
 
-import edu.uci.ics.jung.visualization.VisualizationModel;
-import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.GridLayout;
 import java.awt.Shape;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
+import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Point2D;
 
 import java.util.Collection;
-import javax.swing.BorderFactory;
 import javax.swing.JApplet;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.JToggleButton;
 
 import org.apache.commons.collections15.Factory;
 import org.apache.commons.collections15.functors.ConstantTransformer;
 
 import edu.uci.ics.jung.algorithms.layout.BalloonLayout;
-import edu.uci.ics.jung.algorithms.layout.TreeLayout;
-import edu.uci.ics.jung.algorithms.layout.util.Relaxer;
 import edu.uci.ics.jung.graph.DirectedGraph;
 import edu.uci.ics.jung.graph.DirectedSparseMultigraph;
 import edu.uci.ics.jung.graph.Forest;
@@ -52,21 +36,20 @@ import edu.uci.ics.jung.visualization.GraphZoomScrollPane;
 import edu.uci.ics.jung.visualization.Layer;
 import edu.uci.ics.jung.visualization.VisualizationServer;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
-import edu.uci.ics.jung.visualization.control.CrossoverScalingControl;
 import edu.uci.ics.jung.visualization.control.DefaultModalGraphMouse;
 import edu.uci.ics.jung.visualization.control.ModalGraphMouse;
-import edu.uci.ics.jung.visualization.control.ModalLensGraphMouse;
-import edu.uci.ics.jung.visualization.control.ScalingControl;
 import edu.uci.ics.jung.visualization.decorators.EdgeShape;
 import edu.uci.ics.jung.visualization.decorators.ToStringLabeller;
-import edu.uci.ics.jung.visualization.layout.LayoutTransition;
-import edu.uci.ics.jung.visualization.transform.LensSupport;
 import edu.uci.ics.jung.visualization.transform.MutableTransformer;
 import edu.uci.ics.jung.visualization.transform.MutableTransformerDecorator;
-import edu.uci.ics.jung.visualization.transform.shape.HyperbolicShapeTransformer;
-import edu.uci.ics.jung.visualization.transform.shape.ViewLensSupport;
-import edu.uci.ics.jung.visualization.util.Animator;
+import java.awt.Event;
 import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.util.ArrayList;
+import javax.swing.event.MouseInputListener;
 
 /**
  * Demonstrates the visualization of a Tree using TreeLayout
@@ -120,6 +103,9 @@ public class DisplayGraph extends JApplet {
     VisualizationServer.Paintable rings;
     String root;
     BalloonLayout<String, Integer> radialLayout;
+    ArrayList<ActionListener> mouseMovementListeners = new ArrayList<ActionListener>();
+    ArrayList<ActionListener> mouseClickListeners = new ArrayList<ActionListener>();
+    int eventID = 0;
 
     /**
      * provides a Hyperbolic lens for the view
@@ -154,8 +140,94 @@ public class DisplayGraph extends JApplet {
         vv.addKeyListener(graphMouse.getModeKeyListener());
         graphMouse.setMode(ModalGraphMouse.Mode.TRANSFORMING);
 
+        vv.addMouseMotionListener(new MouseMotionListener() {
+
+            @Override
+            public void mouseDragged(MouseEvent me) {
+            }
+
+            @Override
+            public void mouseMoved(MouseEvent me) {
+                Collection<String> vertices = graph.getVertices();
+                Object source = null;
+                ArrayList array = new ArrayList();
+                array.addAll(vertices);
+                for (Object v : array) {
+                    String vertex = (String) v;
+                    graph.addEdge(edgeFactory.create(), vertex, "test");
+                    Point2D nodeLocation = radialLayout.getCenter("test");
+                    graph.removeVertex("test");
+                    if (nodeLocation.distanceSq(me.getPoint()) < 100) {
+                        source = vertex;
+                        System.out.println(vertex);
+                        
+                        
+                        ActionEvent event = new ActionEvent(source, eventID, null);
+                        eventID++;
+                        //passes source object, which is a string describing the node title
+                        for (ActionListener al : mouseMovementListeners) {
+                            al.actionPerformed(event);
+                        }
+                        break;
+                    }
+                }
+
+            }
+        });
+        vv.addMouseListener(new MouseListener() {
+
+            @Override
+            public void mouseClicked(MouseEvent me) {
+                
+                Collection<String> vertices = graph.getVertices();
+                Object source = null;
+                ArrayList array = new ArrayList();
+                array.addAll(vertices);
+                for (Object v : array) {
+                    String vertex = (String) v;
+                    graph.addEdge(edgeFactory.create(), vertex, "test");
+                    Point2D nodeLocation = radialLayout.getCenter("test");
+                    graph.removeVertex("test");
+                    if (nodeLocation.distanceSq(me.getPoint()) < 100) {
+                        source = vertex;
+                      
+                        
+                        ActionEvent event = new ActionEvent(source, eventID, null);
+                        eventID++;
+                        //passes source object, which is a string describing the node title
+                        for (ActionListener al : mouseMovementListeners) {
+                            al.actionPerformed(event);
+                        }
+                        break;
+                    }
+                }
+
+            
+                
+                
+                
+            }
+
+            @Override
+            public void mousePressed(MouseEvent me) {
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent me) {
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent me) {
+            }
+
+            @Override
+            public void mouseExited(MouseEvent me) {
+            }
+        });
+
     }
-/**
+
+    /**
      * 
      * @param hub- The hub that you want to attach the article
      * @param title- the title of the article, may be switched out for additional metadata to generate icon image
@@ -169,6 +241,20 @@ public class DisplayGraph extends JApplet {
         rings = new Rings(radialLayout);
         vv.getRenderContext().getMultiLayerTransformer().getTransformer(Layer.LAYOUT).setToIdentity();
         vv.addPreRenderPaintable(rings);
+    }
+
+    public void addMouseMovementListener(ActionListener al) {
+        mouseMovementListeners.add(al);
+    }
+
+    public void addMouseClickistener(ActionListener al) {
+        mouseMovementListeners.add(al);
+    }
+
+    private void fireMouseMovementListener(ActionEvent evt) {
+        for (ActionListener al : mouseMovementListeners) {
+            al.actionPerformed(evt);
+        }
     }
 
     public void moveViewTo(String hub) {
