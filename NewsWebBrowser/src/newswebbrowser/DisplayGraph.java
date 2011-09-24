@@ -50,6 +50,7 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.util.ArrayList;
 import javax.swing.event.MouseInputListener;
+import org.apache.commons.collections15.Transformer;
 
 /**
  * Demonstrates the visualization of a Tree using TreeLayout
@@ -128,7 +129,31 @@ public class DisplayGraph extends JApplet {
         rings = new Rings(radialLayout);
         vv.getRenderContext().getMultiLayerTransformer().getTransformer(Layer.LAYOUT).setToIdentity();
         vv.addPreRenderPaintable(rings);
+        vv.setVertexToolTipTransformer(new Transformer() {
 
+            @Override
+            public Object transform(Object i) {
+                Collection<String> vertices = graph.getVertices();
+                Object source = null;
+                ArrayList array = new ArrayList();
+                array.addAll(vertices);
+                for (Object v : array) {
+                    String vertex = (String) v;
+                    graph.addEdge(edgeFactory.create(), vertex, "test");
+                    Point2D nodeLocation = radialLayout.getCenter("test");
+                    graph.removeVertex("test");
+                    if (nodeLocation.distanceSq(vv.getMousePosition()) < 100) {
+                        source = vertex;
+                    }
+                    break;
+
+                }
+                if (source!=null) {
+                    //TODO retrieve the description
+                }
+                return source;
+            }
+        });
 
         Container content = getContentPane();
         GraphZoomScrollPane panel = new GraphZoomScrollPane(vv);
@@ -159,9 +184,8 @@ public class DisplayGraph extends JApplet {
                     graph.removeVertex("test");
                     if (nodeLocation.distanceSq(me.getPoint()) < 100) {
                         source = vertex;
-                        System.out.println(vertex);
-                        
-                        
+
+
                         ActionEvent event = new ActionEvent(source, eventID, null);
                         eventID++;
                         //passes source object, which is a string describing the node title
@@ -178,7 +202,7 @@ public class DisplayGraph extends JApplet {
 
             @Override
             public void mouseClicked(MouseEvent me) {
-                
+
                 Collection<String> vertices = graph.getVertices();
                 Object source = null;
                 ArrayList array = new ArrayList();
@@ -190,8 +214,8 @@ public class DisplayGraph extends JApplet {
                     graph.removeVertex("test");
                     if (nodeLocation.distanceSq(me.getPoint()) < 100) {
                         source = vertex;
-                      
-                        
+
+
                         ActionEvent event = new ActionEvent(source, eventID, null);
                         eventID++;
                         //passes source object, which is a string describing the node title
@@ -202,10 +226,10 @@ public class DisplayGraph extends JApplet {
                     }
                 }
 
-            
-                
-                
-                
+
+
+
+
             }
 
             @Override
