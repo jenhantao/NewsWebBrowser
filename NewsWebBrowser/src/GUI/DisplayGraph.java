@@ -1,12 +1,12 @@
 /*
  * Copyright (c) 2003, the JUNG Project and the Regents of the University of
  * California All rights reserved.
- * 
+ *
  * This software is open-source under the BSD license; see either "license.txt"
  * or http://jung.sourceforge.net/license.txt for a description.
- * 
+ *
  */
-package newswebbrowser;
+package GUI;
 
 import java.awt.Color;
 import java.awt.Container;
@@ -56,9 +56,9 @@ import org.apache.commons.collections15.Transformer;
  * Demonstrates the visualization of a Tree using TreeLayout
  * and BalloonLayout. An examiner lens performing a hyperbolic
  * transformation of the view is also included.
- * 
+ *
  * @author Tom Nelson
- * 
+ *
  */
 @SuppressWarnings("serial")
 public class DisplayGraph extends JApplet {
@@ -118,7 +118,7 @@ public class DisplayGraph extends JApplet {
 
         createTree();
         radialLayout = new BalloonLayout<String, Integer>(graph);
-        radialLayout.setSize(new Dimension(400, 400));
+        radialLayout.setSize(new Dimension(600, 600));
         vv = new VisualizationViewer<String, Integer>(radialLayout, new Dimension(400, 400));
         vv.setBackground(Color.white);
         vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.Line());
@@ -271,7 +271,7 @@ public class DisplayGraph extends JApplet {
     }
 
     /**
-     * 
+     *
      * @param hub- The hub that you want to attach the article
      * @param title- the title of the article, may be switched out for additional metadata to generate icon image
      */
@@ -366,15 +366,25 @@ public class DisplayGraph extends JApplet {
     }
 
     /**
-     * 
+     *
      */
     private void createTree() {
         graph.addVertex("Central Hub");
         graph.addEdge(edgeFactory.create(), "Central Hub", "Sports");
-        graph.addEdge(edgeFactory.create(), "Central Hub", "Politics");
-        graph.addEdge(edgeFactory.create(), "Central Hub", "Finance");
-        graph.addEdge(edgeFactory.create(), "Central Hub", "Arts");
+        graph.addEdge(edgeFactory.create(), "Central Hub", "Tech");
+        graph.addEdge(edgeFactory.create(), "Central Hub", "Business");
+        graph.addEdge(edgeFactory.create(), "Central Hub", "Entertainment");
         graph.addEdge(edgeFactory.create(), "Central Hub", "World");
+
+        graph.addEdge(edgeFactory.create(), "Business", "Wall Street");
+        graph.addEdge(edgeFactory.create(), "World", "Berlin Seeks Rescue Fund");
+        graph.addEdge(edgeFactory.create(), "Wall Street", "Berlin Responds to Earning Calls");
+        graph.addEdge(edgeFactory.create(), "World", "China");
+        graph.addEdge(edgeFactory.create(), "China", "China Battles Inflation");
+        
+
+
+
 //        graph.addEdge(edgeFactory.create(), "Sports", "Basketball");
 //        graph.addEdge(edgeFactory.create(), "Sports", "Tennis");
 
